@@ -65,6 +65,47 @@ def prime_implicant_table(prime_implicants:list,minterms:list)->dir:
                 table[minterm].append(prime_implicant[0])
     return table
 
+def simplification(table:dict)->set:
+    selected_prime_implicants = set()
+    while len(table) > 1:
+        #-----loking for prime implicants that cover one minterm only
+        for minterm in table:
+            if len(table[minterm]) == 1:
+                selected_prime_implicants.add(table[minterm][0])
+        #-----deleting columns that are alredy covered by selected prime implicants
+        for selected in selected_prime_implicants:
+            keys = list(table.keys())
+            for minterm in keys:
+                if selected in table[minterm]:
+                    del table[minterm]
+        #-----looking for prime implicants that appear once but if the table has more than one column only
+        if len(table) > 1:
+            once_prime_impliants = []
+            more_than_once_prime_impliants = set()
+            for minterm in table:
+                for prime_implicant in table[minterm]:
+                    if (prime_implicant not in once_prime_impliants) and (prime_implicant not in more_than_once_prime_impliants):
+                        once_prime_impliants.append(prime_implicant)
+                    elif (prime_implicant in once_prime_impliants):
+                        once_prime_impliants.remove(prime_implicant)
+                        more_than_once_prime_impliants.add(prime_implicant)
+            #-----Deleting prime implicants that appear once
+            for minterm in table:
+                for bad_prime_implicant in once_prime_impliants:
+                    if bad_prime_implicant in table[minterm]:
+                        table[minterm].remove(bad_prime_implicant)
+        elif len(table) == 1:
+            #-----Looking for the best prime implicant for the left column
+            minterm = list(table.keys())[0]
+            prime_implicants = table[minterm]
+            best_option = prime_implicants[0]
+            for prime_implicant in prime_implicants[1:]:
+                if best_option.count('x') < prime_implicant.count('x'):
+                    best_option = prime_implicant
+            selected_prime_implicants.add(best_option)
+            del table[minterm]
+    
+    return selected_prime_implicants
 
 def quine_mcCluskey(minterms:list,size:int):
     rows = [int_to_str_bin(minterm,size) for minterm in minterms]
@@ -78,7 +119,12 @@ def quine_mcCluskey(minterms:list,size:int):
 
     prime_implicants = look_for_prime_implicants(lists)
     table = prime_implicant_table(prime_implicants,rows)
+    print('original table')
     print(table)
-
-#quine_mcCluskey([5,12,16,19,20,2,13,0],5)
+    print('unique prime implicants')
+    print(simplification(table))
+    print('leftovers')
+    print(table)
+    
 quine_mcCluskey([0,2,3,4,6],3)
+quine_mcCluskey([0,1,2,4,6,10,12,13,16,20,21,23,25,26,27,28,30,31],5)
