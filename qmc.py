@@ -44,6 +44,27 @@ def look_for_matched_pairs(group:dict,size:int)->dict:
                 del pairs[i-1]
     return pairs
 
+def look_for_prime_implicants(lists:list)->list:
+    prime_implicants = []
+    prime_implicants_hashes = set()
+    for dic in lists:
+        for lv in dic.values():
+            print(lv)
+            for value in lv:
+                if value[1] and (value[-1] not in prime_implicants_hashes):
+                    prime_implicants.append([value[-1],value[0]])
+                    prime_implicants_hashes.add(value[-1])
+    return prime_implicants
+
+def prime_implicant_table(prime_implicants:list,minterms:list)->dir:
+    table = {}
+    for minterm in minterms:
+        table[minterm] = []
+        for prime_implicant in prime_implicants:
+            if minterm in prime_implicant[-1]:
+                table[minterm].append(prime_implicant[0])
+    return table
+
 
 def quine_mcCluskey(minterms:list,size:int):
     rows = [int_to_str_bin(minterm,size) for minterm in minterms]
@@ -54,10 +75,10 @@ def quine_mcCluskey(minterms:list,size:int):
     while len(pairs) > 0:
         lists.append(pairs)
         pairs = look_for_matched_pairs(pairs,size)
-    #create a simplification function for the last list, it may not have more than one key
 
-    print("<<<<>>>>")
-    print(lists)
+    prime_implicants = look_for_prime_implicants(lists)
+    table = prime_implicant_table(prime_implicants,rows)
+    print(table)
 
 #quine_mcCluskey([5,12,16,19,20,2,13,0],5)
 quine_mcCluskey([0,2,3,4,6],3)
