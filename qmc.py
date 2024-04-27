@@ -107,6 +107,23 @@ def simplification(table:dict)->set:
     
     return selected_prime_implicants
 
+def assign_letters_to_minterm(bin_minterm:str)->str:
+    str_minterm = ""
+    for i in range(0,len(bin_minterm)):
+        if bin_minterm[i] == '0':
+            str_minterm = str_minterm + chr(65 + i) + "'"
+        elif bin_minterm[i] == '1':
+            str_minterm = str_minterm + chr(65 + i)
+    return str_minterm
+
+def create_function(minterms:list)->str:
+    final_function = ""
+    for minterm in minterms:
+        final_function += assign_letters_to_minterm(minterm)
+        if minterm != minterms[-1]:
+            final_function += " + "
+    return final_function
+
 def quine_mcCluskey(minterms:list,size:int):
     rows = [int_to_str_bin(minterm,size) for minterm in minterms]
     first_group = group_rows(rows)
@@ -122,7 +139,8 @@ def quine_mcCluskey(minterms:list,size:int):
     print('original table')
     print(table)
     print('unique prime implicants')
-    print(simplification(table))
+    x = simplification(table)
+    print(create_function(list(x)))
     print('leftovers')
     print(table)
     
