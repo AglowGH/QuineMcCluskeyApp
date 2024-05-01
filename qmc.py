@@ -143,6 +143,7 @@ def quine_mcCluskey(minterms:list,size:int):
     print(create_function(list(x)))
     print('leftovers')
     print(table)
-    
-quine_mcCluskey([0,2,3,4,6],3)
-quine_mcCluskey([0,1,2,4,6,10,12,13,16,20,21,23,25,26,27,28,30,31],5)
+
+if __name__ == '__main__':
+    quine_mcCluskey([0,2,3,4,6],3)
+    quine_mcCluskey([0,1,2,4,6,10,12,13,16,20,21,23,25,26,27,28,30,31],5)
