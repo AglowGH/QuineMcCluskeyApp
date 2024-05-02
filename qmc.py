@@ -49,14 +49,14 @@ def look_for_prime_implicants(lists:list)->list:
     prime_implicants_hashes = set()
     for dic in lists:
         for lv in dic.values():
-            print(lv)
+            #print(lv)
             for value in lv:
                 if value[1] and (value[-1] not in prime_implicants_hashes):
                     prime_implicants.append([value[-1],value[0]])
                     prime_implicants_hashes.add(value[-1])
     return prime_implicants
 
-def prime_implicant_table(prime_implicants:list,minterms:list)->dir:
+def prime_implicant_table(prime_implicants:list,minterms:list)->dict:
     table = {}
     for minterm in minterms:
         table[minterm] = []
