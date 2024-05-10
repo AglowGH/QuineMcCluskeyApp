@@ -1,15 +1,8 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QPushButton, QMainWindow, QWidget,QLabel,QVBoxLayout,QHBoxLayout,QLineEdit,QSpacerItem,QTableWidget,QTextEdit,QTableWidgetItem
-from PyQt6.QtCore import Qt, pyqtSlot
+from PyQt6.QtWidgets import QApplication, QPushButton, QMainWindow, QWidget,QLabel,QVBoxLayout,QHBoxLayout,QLineEdit,QSpacerItem,QTableWidget,QTextEdit,QTableWidgetItem,QScrollArea
+from PyQt6.QtCore import pyqtSlot
 import qmc
 from PyQt6.QtGui import QFont
-
-@pyqtSlot()
-def say_hello():
-    print("Button cliked!!")
-
-#button = QPushButton("Click")
-#button.clicked.connect(say_hello)
 
 class Window(QMainWindow):
 
@@ -66,13 +59,16 @@ class Window(QMainWindow):
         sp_layout_widget = QVBoxLayout()
 
         process_label = QLabel('Process')
+        scroll = QScrollArea()
         self.process_area = QTextEdit()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self.process_area)
         self.process_area.setFont(QFont("Courier New", 10))
         result_label = QLabel('Result')
         self.result_area = QTextEdit()
 
         sp_layout_widget.addWidget(process_label,1)
-        sp_layout_widget.addWidget(self.process_area,20)
+        sp_layout_widget.addWidget(scroll,20)
         sp_layout_widget.addWidget(result_label,1)
         sp_layout_widget.addWidget(self.result_area,8)
 
@@ -103,7 +99,7 @@ class Window(QMainWindow):
         header_labels = []
         for i in range(total_inputs):
             header_labels.append(str(chr(65+i)))
-        header_labels.append('function output')
+        header_labels.append('output')
         self.table.setHorizontalHeaderLabels(header_labels)
         ####
         self.last_coloumn = total_inputs
