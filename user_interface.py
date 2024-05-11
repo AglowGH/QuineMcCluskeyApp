@@ -83,7 +83,7 @@ class Window(QMainWindow):
         ####Getting total of inputs
         total_inputs = int(self.user_input.text())
         self.user_input.clear()
-
+        self.clear_table()
         ####Disable editting of cells
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         ####
