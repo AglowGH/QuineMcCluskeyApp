@@ -49,7 +49,6 @@ def look_for_prime_implicants(lists:list)->list:
     prime_implicants_hashes = set()
     for dic in lists:
         for lv in dic.values():
-            #print(lv)
             for value in lv:
                 if value[1] and (value[-1] not in prime_implicants_hashes):
                     prime_implicants.append([value[-1],value[0]])
@@ -65,47 +64,6 @@ def prime_implicant_table(prime_implicants:list,minterms:list)->dict:
                 table[minterm].append(prime_implicant[0])
     return table
 
-def simplification(table:dict)->set:
-    selected_prime_implicants = set()
-    while len(table) > 1:
-        #-----loking for prime implicants that cover one minterm only
-        for minterm in table:
-            if len(table[minterm]) == 1:
-                selected_prime_implicants.add(table[minterm][0])
-        #-----deleting columns that are alredy covered by selected prime implicants
-        for selected in selected_prime_implicants:
-            keys = list(table.keys())
-            for minterm in keys:
-                if selected in table[minterm]:
-                    del table[minterm]
-        #-----looking for prime implicants that appear once but if the table has more than one column only
-        if len(table) > 1:
-            once_prime_impliants = []
-            more_than_once_prime_impliants = set()
-            for minterm in table:
-                for prime_implicant in table[minterm]:
-                    if (prime_implicant not in once_prime_impliants) and (prime_implicant not in more_than_once_prime_impliants):
-                        once_prime_impliants.append(prime_implicant)
-                    elif (prime_implicant in once_prime_impliants):
-                        once_prime_impliants.remove(prime_implicant)
-                        more_than_once_prime_impliants.add(prime_implicant)
-            #-----Deleting prime implicants that appear once
-            for minterm in table:
-                for bad_prime_implicant in once_prime_impliants:
-                    if bad_prime_implicant in table[minterm]:
-                        table[minterm].remove(bad_prime_implicant)
-        elif len(table) == 1:
-            #-----Looking for the best prime implicant for the left column
-            minterm = list(table.keys())[0]
-            prime_implicants = table[minterm]
-            best_option = prime_implicants[0]
-            for prime_implicant in prime_implicants[1:]:
-                if best_option.count('x') < prime_implicant.count('x'):
-                    best_option = prime_implicant
-            selected_prime_implicants.add(best_option)
-            del table[minterm]
-    
-    return selected_prime_implicants
 
 def assign_letters_to_minterm(bin_minterm:str)->str:
     str_minterm = ""
@@ -124,7 +82,69 @@ def create_function(minterms:list)->str:
             final_function += " + "
     return final_function
 
-def quine_mcCluskey(minterms:list,size:int):
+def create_sets(prime_implicants:list)->dict:
+    prime_implicant_table = {}
+    for prime_implicant in prime_implicants:
+        prime_implicant_table[prime_implicant[0]] = set(prime_implicant[1])
+    return prime_implicant_table
+
+def look_for_epis(prime_implicants:dict)->set:
+    #####looking for essential prime implicants
+    epis = set()
+    for key in prime_implicants:
+        prime_implicant_set = prime_implicants[key]
+        for another_key in prime_implicants:
+            if key != another_key:
+                prime_implicant_set = prime_implicant_set - prime_implicants[another_key]
+                if not prime_implicant_set:
+                    break
+        if prime_implicant_set:
+            epis.add(key)
+    return epis
+
+def delete_epis_from_table(epis:set,prime_implicants:dict)->None:
+    covered_mintermns = set()
+    #####Getting mintermns that ara already covered by the EPIs
+    for key in epis:
+        covered_mintermns = covered_mintermns | prime_implicants[key]
+        #####Deleting EPIs from table
+        del prime_implicants[key]
+    #####Deleting mintermns that are already covered
+    empty_epis = []
+    for key in prime_implicants:
+        prime_implicant_set = prime_implicants[key]
+        prime_implicant_set = prime_implicant_set - covered_mintermns
+        prime_implicants[key] = prime_implicant_set
+        if not prime_implicant_set:
+            empty_epis.append(key)
+    #####Deleting for empty EPIs
+    for empty_epi in empty_epis:
+        del prime_implicants[empty_epi]
+
+def column_dominance(prime_implicants:dict)->dict:
+    dominant_prime_implicants = set()
+    #####looking for dominant prime implicants
+    for key in prime_implicants:
+        if key not in dominant_prime_implicants:
+            dpi = key
+            for another_key in prime_implicants:
+                if key != another_key and prime_implicants[another_key]:
+                    aux_set = prime_implicants[dpi] - prime_implicants[another_key]
+                    if not aux_set:
+                        dpi = another_key
+                    elif (prime_implicants[dpi] == prime_implicants[another_key]) and (dpi.count('x') < another_key.count('x')):
+                        dpi = another_key
+            if dpi not in dominant_prime_implicants:
+                dominant_prime_implicants.add(dpi)
+    #####Deleting non dominant prime implicants
+    non_dominant_prime_implicants = set(prime_implicants.keys()) - dominant_prime_implicants
+    for key in list(prime_implicants.keys()):
+        if key in non_dominant_prime_implicants:
+            del prime_implicants[key]
+        
+    return prime_implicants
+
+def quine_mcCluskey(minterms:list,size:int)->str:
     rows = [int_to_str_bin(minterm,size) for minterm in minterms]
     first_group = group_rows(rows)
     lists = [first_group]
@@ -135,15 +155,26 @@ def quine_mcCluskey(minterms:list,size:int):
         pairs = look_for_matched_pairs(pairs,size)
 
     prime_implicants = look_for_prime_implicants(lists)
-    table = prime_implicant_table(prime_implicants,rows)
-    print('original table')
-    print(table)
-    print('unique prime implicants')
-    x = simplification(table)
-    print(create_function(list(x)))
-    print('leftovers')
-    print(table)
+    #####Reducing prime implicant chart
+    pis_sets = create_sets(prime_implicants)
+    epis = set()
+    while len(pis_sets) > 0:
+        print(pis_sets)
+        new_epis = look_for_epis(pis_sets)
+        delete_epis_from_table(new_epis,pis_sets)
+        epis = epis | new_epis
+        pis_sets = column_dominance(pis_sets)
+        pis_sets = column_dominance(pis_sets)
+
+    logic_function = create_function(list(epis))
+    return logic_function
 
 if __name__ == '__main__':
-    quine_mcCluskey([0,2,3,4,6],3)
-    quine_mcCluskey([0,1,2,4,6,10,12,13,16,20,21,23,25,26,27,28,30,31],5)
+    result = quine_mcCluskey([0,2,3,4,6],3)
+    print(result)
+    result =  quine_mcCluskey([0,1,2,4,6,10,12,13,16,20,21,23,25,26,27,28,30,31],5)
+    print(result)
+    result =  quine_mcCluskey([0, 2, 5, 6, 7, 8, 10, 12, 13, 14, 15],4)
+    print(result)
+    result =  quine_mcCluskey([0, 2, 3,7,9,11,12,14,15],4)
+    print(result)

@@ -220,6 +220,39 @@ class Window(QMainWindow):
         self.result_area.append("f = " + logic_func)
         return logic_func
 
+    def show_t(self,pis_sets:dict,size:int)->None:
+        minterms = []
+        for pi in pis_sets:
+            for minterm in pis_sets[pi]:
+                if minterm not in minterms:
+                    minterms.append(minterm)
+        
+        columns = []
+        header = "  " + (" " * size) + " |"
+        for minterm in minterms:
+            header += " " + minterm + " |"
+            columns.append(minterm)
+        self.process_area.append(header)
+
+        self.process_area.append("-" + ("-" * ((size+3) * (len(minterms)+1) )))
+        for prime in pis_sets:
+            row = header = "| " + prime + " |"
+            accepted_values = []
+            for value in pis_sets[prime]:
+                for column in columns:
+                    if value == column:
+                        accepted_values.append(column)
+
+            for column in columns:
+                if column in accepted_values:
+                    row += " " + "x".center(size) + " |"
+                else:
+                    row += " " + (" " * size) + " |"
+            self.process_area.append(row)
+            self.process_area.append("-" + ("-" * ((size+3) * (len(minterms)+1) )))
+        self.process_area.append("\n")
+
+
     @pyqtSlot()
     def quineMcClusky(self)->None:
         minterms = []
@@ -231,9 +264,22 @@ class Window(QMainWindow):
         rows = [qmc.int_to_str_bin(minterm,size) for minterm in minterms]
         lists = self.group_minterms(size,rows)
         prime_implicants = self.get_and_show_primeImplicans(lists)
-        last_table = self.get_prime_implicant_table(prime_implicants,rows,size)
-        picked_primes = self.simplification(last_table)
-        self.get_logic_func(picked_primes)
+        #####Reducing prime implicant chart
+        pis_sets = qmc.create_sets(prime_implicants)
+        self.process_area.append("Initial prime implicant chart")
+        self.show_t(pis_sets,size)
+        epis = set()
+        while len(pis_sets) > 0:
+            new_epis = qmc.look_for_epis(pis_sets)
+            qmc.delete_epis_from_table(new_epis,pis_sets)
+            self.process_area.append("Prime implicant chart reduced by EPIs")
+            self.show_t(pis_sets,size)
+            epis = epis | new_epis
+            pis_sets = qmc.column_dominance(pis_sets)
+            if len(pis_sets) > 0:
+                self.process_area.append("Prime implicant chart reduced by Column dominance")
+                self.show_t(pis_sets,size)
+        self.get_logic_func(list(epis))
             
 
 if __name__ == '__main__':
