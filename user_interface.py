@@ -273,11 +273,12 @@ class Window(QMainWindow):
             new_epis = qmc.look_for_epis(pis_sets)
             qmc.delete_epis_from_table(new_epis,pis_sets)
             self.process_area.append("Prime implicant chart reduced by EPIs")
+            self.process_area.append("Chosen EPIs: " + str(new_epis) + "\n")
             self.show_t(pis_sets,size)
             epis = epis | new_epis
             pis_sets = qmc.column_dominance(pis_sets)
             if len(pis_sets) > 0:
-                self.process_area.append("Prime implicant chart reduced by Column dominance")
+                self.process_area.append("Prime implicant chart reduced by row dominance")
                 self.show_t(pis_sets,size)
         self.get_logic_func(list(epis))
             
