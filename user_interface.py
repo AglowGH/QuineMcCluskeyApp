@@ -81,7 +81,16 @@ class Window(QMainWindow):
     @pyqtSlot()
     def update_table(self)->None:
         ####Getting total of inputs
-        total_inputs = int(self.user_input.text())
+        if not self.user_input.text():
+            return
+        try:
+            total_inputs = int(self.user_input.text())
+        except ValueError as e:
+            self.user_input.clear()
+            return
+        if total_inputs<0 or total_inputs>24:
+            self.user_input.clear()
+            return
         self.user_input.clear()
         self.clear_table()
         ####Disable editting of cells
@@ -262,6 +271,7 @@ class Window(QMainWindow):
             if item.text() == '1':
                 minterms.append(i)
         rows = [qmc.int_to_str_bin(minterm,size) for minterm in minterms]
+        self.process_area.append(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         lists = self.group_minterms(size,rows)
         prime_implicants = self.get_and_show_primeImplicans(lists)
         #####Reducing prime implicant chart
