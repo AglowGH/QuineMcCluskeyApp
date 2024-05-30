@@ -1,3 +1,4 @@
+import random
 
 def int_to_str_bin(number:int,size:int)->str:
     return format(number,f'0{size}b')
@@ -160,11 +161,19 @@ def quine_mcCluskey(minterms:list,size:int)->str:
     epis = set()
     while len(pis_sets) > 0:
         print(pis_sets)
+        print(epis)
         new_epis = look_for_epis(pis_sets)
         delete_epis_from_table(new_epis,pis_sets)
         epis = epis | new_epis
         pis_sets = column_dominance(pis_sets)
-        pis_sets = column_dominance(pis_sets)
+        if len(new_epis)==0:
+            pis = list(pis_sets.keys())
+            chosen_one = {random.choice(pis)}
+            delete_epis_from_table(chosen_one,pis_sets)
+            epis = epis | chosen_one
+            pis_sets = column_dominance(pis_sets)
+
+        #pis_sets = column_dominance(pis_sets)
 
     logic_function = create_function(list(epis))
     return logic_function
@@ -177,4 +186,6 @@ if __name__ == '__main__':
     result =  quine_mcCluskey([0, 2, 5, 6, 7, 8, 10, 12, 13, 14, 15],4)
     print(result)
     result =  quine_mcCluskey([0, 2, 3,7,9,11,12,14,15],4)
+    print(result)
+    result =  quine_mcCluskey([9,10,11,12,13,14],4)
     print(result)

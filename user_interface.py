@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QApplication, QPushButton, QMainWindow, QWidget,QLab
 from PyQt6.QtCore import pyqtSlot
 import qmc
 from PyQt6.QtGui import QFont
+import random
 
 class Window(QMainWindow):
 
@@ -290,6 +291,19 @@ class Window(QMainWindow):
             if len(pis_sets) > 0:
                 self.process_area.append("Prime implicant chart reduced by row dominance")
                 self.show_t(pis_sets,size)
+            if len(new_epis) == 0:
+                pis = list(pis_sets.keys())
+                print(pis)
+                chosen_one = {random.choice(pis)}
+                print(chosen_one)
+                qmc.delete_epis_from_table(chosen_one,pis_sets)
+                self.process_area.append("Prime implicant chart reduced by EMERGENCY")
+                self.process_area.append("Chosen EPIs: " + str(chosen_one) + "\n")
+                self.show_t(pis_sets,size)
+                epis = epis | chosen_one
+                pis_sets = qmc.column_dominance(pis_sets)
+
+
         self.get_logic_func(list(epis))
             
 
